@@ -117,11 +117,6 @@
 		<delete dir="${reports.dir}"/>
 		<delete dir="${junit.dir}"/>
 		<delete dir="${cobertura.dir}"/>
-		<delete dir="${junit.xml.dir}"/>
-		<delete dir="${junit.html.dir}"/>
-		<delete dir="${coverage.xml.dir}"/>
-		<delete dir="${coverage.summaryxml.dir}"/>
-		<delete dir="${coverage.html.dir}"/>
 	</target>
 
 	<target name="clean-build" depends="clean,jar"/>
