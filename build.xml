@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="suiproject" basedir=".">
+	<description>
+		This is a sample project for java application created by sui
+	</description>
+	<property file="build.properties"/>
+	
+	<path id="classpath">
+		<fileset dir="${cobertura.main.dir}">
+			<include name="cobertura*.jar" />
+			<include name="lib/**/*.jar" />
+		</fileset>
+	</path>
+
+	<path id="application" location="${jar.dir}/${ant.project.name}.jar"/>
+
+	<taskdef classpathref="classpath" resource="tasks.properties"/>
+
+
+	<target name="init">
+		<mkdir dir="${build.dir}"/>
+		<mkdir dir="${classes.dir}"/>
+		<mkdir dir="${reports.dir}"/>
+		<mkdir dir="${junit.dir}"/>
+		<mkdir dir="${cobertura.dir}"/>
+		<mkdir dir="${instrumented.dir}" />
+<!-- 
+		<mkdir dir="${cobertura.dir}"/>
+		
+		<mkdir dir="${junit.xml.dir}"/>
+		<mkdir dir="${junit.html.dir}"/>
+		<mkdir dir="${coverage.xml.dir}"/>
+		<mkdir dir="${coverage.summaryxml.dir}"/>
+		<mkdir dir="${coverage.html.dir}"/>
+	-->
+
+</target>
+
+<target name="compile" depends="init">
+	<javac srcdir="${src.dir}" destdir="${classes.dir}" debug="yes" classpathref="classpath">
+	</javac>
+
+</target>
+
+<target name="jar" depends="compile">
+	<jar destfile="${jar.dir}/${ant.project.name}.jar" basedir="${classes.dir}">
+
+	</jar>
+</target>
+
+<target name="instrument" depends="init,compile">
+		<!--
+			Remove the coverage data file and any old instrumentation.
+		-->
+		<delete file="cobertura.ser"/>
+		<delete dir="${instrumented.dir}" />
+
+		<!--
+			Instrument the application classes, writing the
+			instrumented classes into ${build.instrumented.dir}.
+		-->
+		<cobertura-instrument todir="${instrumented.dir}">
+			<!--
+				The following line causes instrument to ignore any
+				source line containing a reference to slf4j/logback, for the
+				purposes of coverage reporting.
+			-->
+			<ignore regex="org.slf4j.*" />
+
+			<fileset dir="${classes.dir}">
+				<!--
+					Instrument all the application classes, but
+					don't instrument the test classes.
+				-->
+				<include name="**/*.class" />
+				<exclude name="**/*Test.class" />
+			</fileset>
+		</cobertura-instrument>
+	</target>
+
+	<target name="test" depends="jar">
+		<junit haltonfailure="true" printsummary="true">
+			<classpath location="${instrumented.dir}" />
+			<classpath>
+				<path refid="classpath"/>
+				<path refid="application"/>
+			</classpath>
+			<formatter type="xml"/>
+			<batchtest fork="yes" todir="${junit.dir}">
+				<fileset dir="${test.dir}" includes="**/*Test.java" />
+			</batchtest>
+		</junit>
+
+		<junitreport todir="${junit.dir}">
+			<fileset dir="${junit.dir}" includes="TEST-*.xml"/>
+			<report todir="${junit.dir}"/>
+		</junitreport>
+
+		
+	</target>
+
+	<target name="coverage-report">
+		<cobertura-report destdir="${cobertura.dir}">
+			<fileset dir="${src.dir}">
+				<include name="**/*.java"/>
+			</fileset>
+		</cobertura-report>
+	</target>
+
+
+	<target name="clean">
+		<delete dir="${build.dir}"/>
+		<delete dir="${classes.dir}"/>
+		<delete file="cobertura.ser"/>
+		<delete dir="${instrumented.dir}" />
+		<delete dir="${reports.dir}"/>
+		<delete dir="${junit.dir}"/>
+		<delete dir="${cobertura.dir}"/>
+		<delete dir="${junit.xml.dir}"/>
+		<delete dir="${junit.html.dir}"/>
+		<delete dir="${coverage.xml.dir}"/>
+		<delete dir="${coverage.summaryxml.dir}"/>
+		<delete dir="${coverage.html.dir}"/>
+	</target>
+
+	<target name="clean-build" depends="clean,jar"/>
+
+	<target name="coverage" depends="compile,instrument,test,coverage-report" description="Compile, instrument ourself, run the tests and generate JUnit and coverage reports."/>
+
+</project>

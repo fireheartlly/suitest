@@ -1,0 +1,6 @@
+.DS_Store
+build/
+cobertura.ser
+instrumented/
+lib/
+reports/
